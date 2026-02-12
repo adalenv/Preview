@@ -109,6 +109,30 @@ export async function listContents(owner, repo, path, ref) {
 }
 
 /**
+ * Get the latest commit date for a path (directory or file). One request; used as "updated" for the listing.
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} path
+ * @param {string} ref
+ * @returns {Promise<string|null>} Formatted date string or null
+ */
+export async function getLatestCommitDate(owner, repo, path, ref) {
+  const url = `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?sha=${encodeURIComponent(ref)}&path=${encodeURIComponent(path || '.')}&per_page=1`;
+  const res = await fetch(url, { headers: headers() });
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) return null;
+  const dateStr = data[0].commit?.author?.date;
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diff < 604800000) return d.toLocaleDateString([], { weekday: 'short' });
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
+/**
  * Build raw URL for a file (no fetch). Use this for iframe src so the document loads from
  * raw.githubusercontent.com and relative assets (CSS, JS) load same-origin, avoiding ORB.
  * @param {string} owner

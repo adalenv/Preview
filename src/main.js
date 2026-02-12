@@ -22,8 +22,9 @@ let state = {
   repo: '',
   ref: '',
   path: '',
-  previewPath: '', // full path to current HTML file being previewed
+  previewPath: '',
   listing: [],
+  fileDates: {}, // path -> formatted date string (last commit per file/dir)
   loaded: false,
 };
 
@@ -137,9 +138,14 @@ async function openPath(path) {
   try {
     const items = await loadListing(state.owner, state.repo, path, state.ref);
     state.listing = items;
+    const dateEntries = await Promise.all(
+      items.map(async (item) => [item.path, await api.getLatestCommitDate(state.owner, state.repo, item.path, state.ref)])
+    );
+    state.fileDates = Object.fromEntries(dateEntries);
     ui.renderFileList(items, ui.elements.fileFilter().value, (p, type) => onSelect(p, type), getFileActions());
   } catch (e) {
     ui.showError(e.message || 'Failed to load');
+    state.fileDates = {};
     ui.renderFileList([], '', () => {}, {});
   } finally {
     ui.showLoading(false);
@@ -147,19 +153,10 @@ async function openPath(path) {
 }
 
 function getFileActions() {
-  if (!state.previewPath || !state.owner || !state.repo) return {};
   return {
     selectedPath: state.previewPath,
-    rawUrl: api.getRawUrl(state.owner, state.repo, state.previewPath, state.ref),
-    githubUrl: `https://github.com/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}/blob/${encodeURIComponent(state.ref)}/${state.previewPath.split('/').map(encodeURIComponent).join('/')}`,
-    onOpenNewTab: openPreviewInNewTab,
-    onCopyLink: () => {
-      const url = buildShareUrl();
-      ui.copyShareLinkToClipboard(url).then((ok) => {
-        if (ok) ui.showError('Copied!');
-        setTimeout(() => ui.clearError(), 1200);
-      });
-    },
+    fileDates: state.fileDates,
+    onOpen: openPreviewInNewTab,
   };
 }
 

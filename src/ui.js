@@ -74,7 +74,7 @@ function isHtmlFile(name) {
  * @param {Array<{ name: string, path: string, type: 'file'|'dir' }>} items
  * @param {string} filter - filter by name
  * @param {(path: string, type: string) => void} onSelect
- * @param {{ selectedPath?: string, rawUrl?: string, githubUrl?: string, onOpenNewTab?: () => void, onCopyLink?: () => void }} [fileActions]
+ * @param {{ selectedPath?: string, fileDates?: Record<string, string|null>, onOpen?: () => void }} [fileActions]
  */
 export function renderFileList(items, filter, onSelect, fileActions = {}) {
   const list = elements.fileList();
@@ -83,7 +83,7 @@ export function renderFileList(items, filter, onSelect, fileActions = {}) {
   const filtered = q ? items.filter((i) => i.name.toLowerCase().includes(q)) : items;
   const dirs = filtered.filter((i) => i.type === 'dir').sort((a, b) => a.name.localeCompare(b.name));
   const files = filtered.filter((i) => i.type === 'file').sort((a, b) => a.name.localeCompare(b.name));
-  const { selectedPath, rawUrl, githubUrl, onOpenNewTab, onCopyLink } = fileActions;
+  const { selectedPath, fileDates = {}, onOpen } = fileActions;
   for (const item of [...dirs, ...files]) {
     const li = document.createElement('li');
     li.className = `file-item file-item--${item.type}`;
@@ -94,49 +94,24 @@ export function renderFileList(items, filter, onSelect, fileActions = {}) {
     name.className = 'file-name';
     name.textContent = item.name;
     li.appendChild(icon);
-    const nameCell = document.createElement('span');
-    nameCell.className = 'file-item-name-cell';
-    nameCell.appendChild(name);
+    li.appendChild(name);
+    const dateCell = document.createElement('span');
+    dateCell.className = 'file-item-date';
+    dateCell.textContent = fileDates[item.path] ?? '—';
+    li.appendChild(dateCell);
     const isSelectedHtml = item.type === 'file' && isHtmlFile(item.name) && item.path === selectedPath;
     if (isSelectedHtml) li.classList.add('file-item--selected');
-    if (isSelectedHtml && (rawUrl || onOpenNewTab || githubUrl || onCopyLink)) {
-      const actions = document.createElement('span');
-      actions.className = 'file-row-actions';
-      if (rawUrl) {
-        const a = document.createElement('a');
-        a.href = rawUrl;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.textContent = 'Open Raw';
-        a.addEventListener('click', (e) => e.stopPropagation());
-        actions.appendChild(a);
-      }
-      if (onOpenNewTab) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = 'New tab';
-        btn.addEventListener('click', (e) => { e.stopPropagation(); onOpenNewTab(); });
-        actions.appendChild(btn);
-      }
-      if (githubUrl) {
-        const a = document.createElement('a');
-        a.href = githubUrl;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.textContent = 'GitHub';
-        a.addEventListener('click', (e) => e.stopPropagation());
-        actions.appendChild(a);
-      }
-      if (onCopyLink) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = 'Copy link';
-        btn.addEventListener('click', (e) => { e.stopPropagation(); onCopyLink(); });
-        actions.appendChild(btn);
-      }
-      nameCell.appendChild(actions);
+    const actionCell = document.createElement('span');
+    actionCell.className = 'file-item-action';
+    if (isSelectedHtml && onOpen) {
+      const openBtn = document.createElement('button');
+      openBtn.type = 'button';
+      openBtn.className = 'file-item-open';
+      openBtn.textContent = 'Open';
+      openBtn.addEventListener('click', (e) => { e.stopPropagation(); onOpen(); });
+      actionCell.appendChild(openBtn);
     }
-    li.appendChild(nameCell);
+    li.appendChild(actionCell);
     li.addEventListener('click', () => onSelect(item.path, item.type));
     list.appendChild(li);
   }
