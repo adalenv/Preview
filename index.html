@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview – GitHub HTML Preview</title>
+  <!--
+    CSP: style-src and script-src allow unsafe-inline so "Open in new tab" blob documents (same-origin) can run
+    previewed pages that use inline styles/scripts (e.g. Tailwind CDN). default-src otherwise unchanged.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data:; style-src 'self' https: data: 'unsafe-inline'; script-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; frame-src 'self' blob:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com;">
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <h1 class="logo">Preview</h1>
+      <div class="header-actions">
+        <div class="repo-input-wrap">
+          <div class="repo-dropdown-wrap">
+            <input type="text" id="repo-input" placeholder="owner or owner/repo" autocomplete="off">
+            <ul id="repo-dropdown" class="repo-dropdown hidden"></ul>
+          </div>
+          <input type="text" id="branch-input" placeholder="branch (optional)" autocomplete="off">
+          <button type="button" id="btn-load">Load</button>
+        </div>
+        <button type="button" id="btn-settings" class="icon-btn" title="Settings">⚙</button>
+      </div>
+    </header>
+    <div class="main">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <nav class="breadcrumb" id="breadcrumb"></nav>
+          <input type="search" id="file-filter" placeholder="Filter files…" class="filter-input">
+        </div>
+        <div class="file-list-wrap">
+          <div id="loading" class="loading hidden">Loading…</div>
+          <div id="error-message" class="error-message hidden"></div>
+          <ul class="file-list" id="file-list"></ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-backdrop" data-dismiss="modal"></div>
+    <div class="modal-content">
+      <h2>Settings</h2>
+      <p class="modal-note">Use your GitHub login: create a token while logged in on GitHub, then paste it here. Stored in localStorage only.</p>
+      <a id="link-create-token" href="https://github.com/settings/tokens/new?description=Preview&scopes=repo,read:user" target="_blank" rel="noopener" class="modal-link">Create token (opens GitHub)</a>
+      <input type="password" id="token-input" placeholder="ghp_…" autocomplete="off">
+      <div class="modal-actions">
+        <button type="button" id="btn-save-token">Save</button>
+        <button type="button" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
