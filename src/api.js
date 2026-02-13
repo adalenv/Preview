@@ -126,10 +126,10 @@ export async function getLatestCommitDate(owner, repo, path, ref) {
   if (!dateStr) return null;
   const d = new Date(dateStr);
   const now = new Date();
-  const diff = now - d;
-  if (diff < 86400000) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  if (diff < 604800000) return d.toLocaleDateString([], { weekday: 'short' });
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+  const sameDay = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  const datePart = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+  const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return sameDay ? `${datePart}, ${timePart}` : datePart;
 }
 
 /**
